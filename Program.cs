@@ -13,19 +13,13 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Controladores y Swagger
+// Controladores
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-   
-}
-
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
