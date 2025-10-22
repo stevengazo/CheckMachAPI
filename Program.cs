@@ -4,6 +4,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using CheckMachAPI.Data;
+using CheckMachAPI.Settings;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,17 @@ builder.Services.AddAuthentication()
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
     });
+
+// Email 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton(resolver => 
+    new EmailSender(builder.Configuration.GetSection("EmailSettings").Get<EmailSettings>()));
+// Blob Storage Azure
+builder.Services.Configure<BlobSettings>(builder.Configuration.GetSection("BlobSettings"));
+builder.Services.AddSingleton(resolver => 
+    new BlobService(builder.Configuration.GetSection("BlobSettings").Get<BlobSettings>()));
+
+
 
 // Controladores + Swagger
 builder.Services.AddControllers();

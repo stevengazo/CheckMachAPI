@@ -7,12 +7,29 @@ services:
       - "5000:5000"
       - "5001:5001"
     environment:
+      # 🔹 Conexión a SQL Server (contenedor interno)
       - ConnectionStrings__DefaultConnection=Server=db;Database=CheckMachDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+
+      # 🔹 Configuración JWT
       - Jwt__Key=TuClaveSuperSecreta12345
       - Jwt__Issuer=CheckMachAPI
       - Jwt__Audience=CheckMachAPIUsers
+
+      # 🔹 Configuración de EmailSender
+      - EmailSettings__SmtpHost=smtp.tucorreo.com
+      - EmailSettings__SmtpPort=587
+      - EmailSettings__SmtpUser=tucorreo@dominio.com
+      - EmailSettings__SmtpPass=tucontraseña
+      - EmailSettings__SenderName=CheckMach Notifier
+      - EmailSettings__SenderEmail=tucorreo@dominio.com
+
+      # 🔹 Configuración de Azure Blob Storage (Azurite local)
+      - BlobSettings__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      - BlobSettings__ContainerName=checkmach-container
+
     depends_on:
       - db
+      - azurite
 
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -24,5 +41,17 @@ services:
     volumes:
       - sql_data:/var/opt/mssql
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000" # Blob service
+      - "10001:10001" # Queue service (si lo usas)
+      - "10002:10002" # Table service (opcional)
+    volumes:
+      - azurite_data:/data
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+
 volumes:
   sql_data:
+  azurite_data:
