@@ -34,15 +34,25 @@ builder.Services.AddAuthentication()
         };
     });
 
+#region  // Configuración de servicios personalizados
+
+
 // Email 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddSingleton(resolver => 
+builder.Services.AddSingleton(resolver =>
     new EmailSender(builder.Configuration.GetSection("EmailSettings").Get<EmailSettings>()));
+
 // Blob Storage Azure
 builder.Services.Configure<BlobSettings>(builder.Configuration.GetSection("BlobSettings"));
-builder.Services.AddSingleton(resolver => 
+builder.Services.AddSingleton(resolver =>
     new BlobService(builder.Configuration.GetSection("BlobSettings").Get<BlobSettings>()));
 
+// Notification Hubs Azure
+builder.Services.Configure<NotificationSettings>(
+    builder.Configuration.GetSection("NotificationHub")
+);
+
+#endregion
 
 
 // Controladores + Swagger
