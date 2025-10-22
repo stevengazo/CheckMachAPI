@@ -1,0 +1,32 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.vscode/
+*.idea/
+
+# Logs
+*.log
+TestResults/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# Secret files
+appsettings.Development.json
+appsettings.Secrets.json
+
+# Docker files themselves (opcional)
+Dockerfile
+docker-compose.override.yml

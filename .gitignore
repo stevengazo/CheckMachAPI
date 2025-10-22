@@ -1,0 +1,49 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.vs/
+*.vscode/
+*.ncrunch*
+*.dotCover
+*.idea/
+
+# Rider
+.idea/
+*.sln.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+
+
+# Secret files
+appsettings.Development.json
+appsettings.Secrets.json
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+*.trx
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Dotnet Watch
+.dotnetwatch/

@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  checkmachapi:
+    build: .
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=CheckMachDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+      - Jwt__Key=TuClaveSuperSecreta12345
+      - Jwt__Issuer=CheckMachAPI
+      - Jwt__Audience=CheckMachAPIUsers
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+volumes:
+  sql_data:

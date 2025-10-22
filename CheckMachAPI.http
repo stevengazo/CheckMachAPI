@@ -1,0 +1,6 @@
+@CheckMachAPI_HostAddress = http://localhost:5030
+
+GET {{CheckMachAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
