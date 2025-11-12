@@ -111,12 +111,47 @@ app.MapControllers();
 app.MapGet("/", async context =>
 {
     context.Response.ContentType = "text/html; charset=utf-8";
-    var html = @"<!DOCTYPE html>
-        <html lang='es'>
-        <head><meta charset='UTF-8'><title>CheckMach API</title></head>
-        <body><h1>🚀 Bienvenido a CheckMach API</h1>
-        <button onclick=""window.location.href='/swagger'"">Ir a Swagger UI</button>
-        </body></html>";
+    var html = @"
+            <!DOCTYPE html>
+            <html lang='es'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>CheckMach API</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Roboto, sans-serif;
+                        background: linear-gradient(135deg, #1e90ff, #00bcd4);
+                        color: #fff;
+                        text-align: center;
+                        padding-top: 10%;
+                    }
+                    h1 {
+                        font-size: 2.5em;
+                        margin-bottom: 20px;
+                    }
+                    button {
+                        background-color: #fff;
+                        color: #1e90ff;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-size: 1.1em;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease, transform 0.2s ease;
+                    }
+                    button:hover {
+                        background-color: #f1f1f1;
+                        transform: scale(1.05);
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>🚀 Bienvenido a <strong>CheckMach API</strong></h1>
+                <button onclick=""window.location.href='/swagger'"">Ir a Swagger UI</button>
+            </body>
+            </html>";
+
     await context.Response.WriteAsync(html);
 });
 
