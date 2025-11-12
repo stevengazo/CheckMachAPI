@@ -5,8 +5,8 @@ namespace CheckMachAPI.Data
 {
     public class ApplicationUser : IdentityUser
     {
-        public string Name { get; set; }
-        public string LastName { get; set; }
+        public string? Name { get; set; } = "";
+        public string? LastName { get; set; } = "";
         public ICollection<Maintenance> Maintenances { get; set; }
         public ICollection<Inspection> Inspections { get; set; }
 

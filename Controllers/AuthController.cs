@@ -5,6 +5,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using CheckMachAPI.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace CheckMachAPI.Controllers
 {
@@ -12,22 +14,38 @@ namespace CheckMachAPI.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly EmailSender _emailSender;
+        private readonly ApplicationDbContext _db;
 
-        public AuthController(UserManager<IdentityUser> userManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, EmailSender emailSender, ApplicationDbContext applicationDbContext)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _emailSender = emailSender;
+            _db = applicationDbContext;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var user = new IdentityUser { UserName = model.Username, Email = model.Email };
+            var count = _db.Users.Count();
+          
+            var user = new ApplicationUser { UserName = model.Username, Email = model.Email };
+            if (count == 0)
+            {
+                user.EmailConfirmed = true;
+            }
             var result = await _userManager.CreateAsync(user, model.Password);
 
+            if(count == 0)
+            {
+                await AssignRolesAsync(user);   
+            }
+
             if (!result.Succeeded)
+               
                 return BadRequest(result.Errors);
 
             return Ok(new { Message = "Usuario registrado correctamente" });
@@ -62,8 +80,51 @@ namespace CheckMachAPI.Controllers
 
             return Ok(new { Token = jwt });
         }
+        [HttpOptions("send-token")]
+        public async Task<IActionResult> SendResetToken([FromBody] string email)
+        {
+            try
+            {
+                var user  = await  _userManager.FindByNameAsync(email); 
+                if(user == null)
+                {
+                    return NotFound("No encontrado");
+
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                await _emailSender.SendEmailAsync(email, "Cambio contrase;a", token);
+                return Ok();
+            }
+            catch ( Exception d)
+            {
+                return BadRequest();
+            }
+        }
+
+        private async Task AssignRolesAsync(ApplicationUser user)
+        {
+            try
+            {
+                string[] rolName = ["admin", "manager", "user"];
+
+                if( (await _userManager.Users.CountAsync()) == 1)
+                {
+                    foreach (var item in rolName)
+                    {
+                        await _userManager.AddToRoleAsync(user, item);
+                    }
+                }
+            }
+            catch (Exception d)
+            {
+                throw d;
+            }
+        }
+    
     }
 
+   
     // Modelos para recibir datos
     public record RegisterModel(string Username, string Email, string Password);
     public record LoginModel(string Username, string Password);
