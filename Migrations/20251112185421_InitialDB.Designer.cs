@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckMachAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251112164908_InitialDB")]
+    [Migration("20251112185421_InitialDB")]
     partial class InitialDB
     {
         /// <inheritdoc />
@@ -267,6 +267,35 @@ namespace CheckMachAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Maintenances");
+                });
+
+            modelBuilder.Entity("CheckMachAPI.Models.PasswordResetCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Expiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetCodes");
                 });
 
             modelBuilder.Entity("CheckMachAPI.Models.Photo", b =>
@@ -670,6 +699,17 @@ namespace CheckMachAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CheckMachAPI.Models.PasswordResetCode", b =>
+                {
+                    b.HasOne("CheckMachAPI.Data.ApplicationUser", "User")
+                        .WithMany("PasswordResets")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CheckMachAPI.Models.TimePeerProject", b =>
                 {
                     b.HasOne("CheckMachAPI.Models.Machine", "Machine")
@@ -776,6 +816,8 @@ namespace CheckMachAPI.Migrations
                     b.Navigation("InventoryMoves");
 
                     b.Navigation("Maintenances");
+
+                    b.Navigation("PasswordResets");
                 });
 #pragma warning restore 612, 618
         }

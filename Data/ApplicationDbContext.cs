@@ -23,6 +23,7 @@ namespace CheckMachAPI.Data
         public DbSet<Photo> Photos { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<TimePeerProject> TimePeerProjects { get; set; }
+        public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -266,6 +266,35 @@ namespace CheckMachAPI.Migrations
                     b.ToTable("Maintenances");
                 });
 
+            modelBuilder.Entity("CheckMachAPI.Models.PasswordResetCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Expiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetCodes");
+                });
+
             modelBuilder.Entity("CheckMachAPI.Models.Photo", b =>
                 {
                     b.Property<int>("PhotoId")
@@ -667,6 +696,17 @@ namespace CheckMachAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CheckMachAPI.Models.PasswordResetCode", b =>
+                {
+                    b.HasOne("CheckMachAPI.Data.ApplicationUser", "User")
+                        .WithMany("PasswordResets")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CheckMachAPI.Models.TimePeerProject", b =>
                 {
                     b.HasOne("CheckMachAPI.Models.Machine", "Machine")
@@ -773,6 +813,8 @@ namespace CheckMachAPI.Migrations
                     b.Navigation("InventoryMoves");
 
                     b.Navigation("Maintenances");
+
+                    b.Navigation("PasswordResets");
                 });
 #pragma warning restore 612, 618
         }
