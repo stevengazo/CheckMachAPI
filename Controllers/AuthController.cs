@@ -71,7 +71,7 @@ namespace CheckMachAPI.Controllers
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(ClaimTypes.Name, user.UserName)
                 }),
-                Expires = DateTime.Now.AddHours(2),
+                Expires = DateTime.Now.AddDays(30),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
