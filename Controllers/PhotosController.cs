@@ -24,18 +24,57 @@ namespace CheckMachAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly FileManagerService _file;
+        private readonly IWebHostEnvironment _env;
 
-        public PhotosController(ApplicationDbContext context, FileManagerService fileManager)
+        public PhotosController(ApplicationDbContext context, FileManagerService fileManager, IWebHostEnvironment env)
         {
             _context = context;
             _file = fileManager;
+        _env = env;
         }
 
-        // GET: api/Photos
+        /// <summary>
+        /// Obtiene todas las fotos y transforma su ruta física en una URL pública accesible desde el navegador.
+        /// </summary>
+        /// <returns>Lista de fotos con ruta accesible públicamente.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Photo>>> GetPhotos()
         {
-            return await _context.Photos.ToListAsync();
+            var photos = await _context.Photos.ToListAsync();
+
+            // Construir URL base (http://localhost:5000 o el dominio real)
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+            // Convertir rutas físicas → URLs públicas
+            foreach (var photo in photos)
+            {
+                if (!string.IsNullOrWhiteSpace(photo.FilePath))
+                {
+                    photo.FilePath = ConvertPhysicalToPublicUrl(photo.FilePath, baseUrl);
+                }
+            }
+
+            return photos;
+        }
+        /// <summary>
+        /// Convierte una ruta física del servidor en una URL accesible públicamente.
+        /// </summary>
+        /// <param name="physicalPath">Ruta absoluta del archivo en el servidor.</param>
+        /// <param name="baseUrl">URL base del servidor (e.g. http://localhost:5000).</param>
+        /// <returns>URL pública del archivo.</returns>
+        private string ConvertPhysicalToPublicUrl(string physicalPath, string baseUrl)
+        {
+            // Obtener solo la parte después de la carpeta "Files"
+            var relativePath = physicalPath
+                .Replace(_env.ContentRootPath, "")
+                .Replace("\\", "/");
+
+            // Agregar el prefijo /files
+            if (!relativePath.StartsWith("/Files"))
+                relativePath = "/Files" + relativePath;
+
+
+            return $"{baseUrl}{relativePath}";
         }
 
         // GET: api/Machines/searchFull?name=Excavator&type=Preventive&photoType=Machine
@@ -133,7 +172,11 @@ namespace CheckMachAPI.Controllers
 
             return NoContent();
         }
-
+        /// <summary>
+        /// Endpoint para recibir archivos y campos de formulario mediante multipart/form-data,
+        /// guardar los archivos usando FileManagerService y crear un registro Photo en la base de datos.
+        /// </summary>
+        /// <returns>Retorna información del registro creado y los archivos almacenados.</returns>
         [HttpPost]
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(long.MaxValue)]
@@ -142,57 +185,87 @@ namespace CheckMachAPI.Controllers
         {
             try
             {
+                /// -----------------------------------------------------------
+                /// 1️⃣ VALIDAR QUE LA PETICIÓN SEA multipart/form-data
+                /// -----------------------------------------------------------
                 if (!Request.ContentType?.StartsWith("multipart/form-data") ?? true)
                     return BadRequest("Request must be multipart/form-data");
 
+                // Extraer el boundary del Content-Type
                 var mediaType = MediaTypeHeaderValue.Parse(Request.ContentType);
                 var boundary = HeaderUtilities.RemoveQuotes(mediaType.Boundary).Value;
 
-                // 1️⃣ Leer partes del multipart
+                /// -----------------------------------------------------------
+                /// 2️⃣ INICIALIZAR LECTOR DE MULTIPART
+                /// MultipartReader permite procesar cada sección (field o file)
+                /// sin cargar todo el request en memoria.
+                /// -----------------------------------------------------------
                 var reader = new MultipartReader(boundary, Request.Body);
 
+                // Diccionario para campos de formulario
                 var formFields = new Dictionary<string, string>();
+
+                // Lista de archivos guardados
                 var savedFiles = new List<string>();
 
                 MultipartSection? section;
+
+                /// -----------------------------------------------------------
+                /// 3️⃣ LEER SECCIÓN POR SECCIÓN DEL MULTIPART
+                /// Cada "section" es un archivo o un campo normal.
+                /// -----------------------------------------------------------
                 while ((section = await reader.ReadNextSectionAsync()) != null)
                 {
                     var hasContentDispositionHeader =
                         ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition);
-                  
+
                     if (!hasContentDispositionHeader)
                         continue;
 
-                    // 2️⃣ SI ES ARCHIVO → lo envías a tu FileManager
+                    /// -----------------------------------------------------------
+                    /// 4️⃣ PROCESAR ARCHIVO (input type=file)
+                    /// - Si tiene FileName, entonces es un archivo.
+                    /// - Se envía directo al FileManagerService.
+                    /// -----------------------------------------------------------
                     if (contentDisposition!.DispositionType == "form-data" &&
                         !string.IsNullOrEmpty(contentDisposition.FileName.Value))
                     {
                         string storedPath = await _file.SaveFileStreamAsync(
-                                                                               section.Body,
-                                                                               contentDisposition.FileName.Value!,
-                                                                               HttpContext.RequestAborted
-                                                                           );
+                                                                                section.Body,
+                                                                                contentDisposition.FileName.Value!,
+                                                                                HttpContext.RequestAborted,
+                                                                                FileManagerServiceTypes.Images
+                                                                            );
+
                         savedFiles.Add(storedPath);
                         continue;
                     }
 
-                    // 3️⃣ SI ES FORM FIELD → lo agregas al diccionario
+                    /// -----------------------------------------------------------
+                    /// 5️⃣ PROCESAR CAMPOS DE FORMULARIO (input type=text / hidden)
+                    /// -----------------------------------------------------------
                     if (contentDisposition.DispositionType == "form-data")
                     {
                         using var readerField = new StreamReader(section.Body);
                         string fieldValue = await readerField.ReadToEndAsync();
+
+                        // Registrar el valor del campo usando su nombre
                         formFields[contentDisposition.Name.Value!] = fieldValue;
                     }
                 }
 
-                // 4️⃣ Validar campos requeridos del modelo
+                /// -----------------------------------------------------------
+                /// 6️⃣ VALIDAR CAMPOS REQUERIDOS DEL MODELO Photo
+                /// -----------------------------------------------------------
                 if (!formFields.ContainsKey("ReferenceId") ||
                     !formFields.ContainsKey("PhotoType"))
                 {
                     return BadRequest("ReferenceId y PhotoType son obligatorios");
                 }
 
-                // 5️⃣ Crear modelo Photo
+                /// -----------------------------------------------------------
+                /// 7️⃣ CREAR INSTANCIA DEL MODELO Photo CON LOS DATOS RECIBIDOS
+                /// -----------------------------------------------------------
                 var photo = new Photo
                 {
                     FilePath = savedFiles.FirstOrDefault(),
@@ -201,9 +274,15 @@ namespace CheckMachAPI.Controllers
                     PhotoType = formFields["PhotoType"]
                 };
 
+                /// -----------------------------------------------------------
+                /// 8️⃣ GUARDAR EN BASE DE DATOS
+                /// -----------------------------------------------------------
                 _context.Photos.Add(photo);
                 await _context.SaveChangesAsync();
 
+                /// -----------------------------------------------------------
+                /// 9️⃣ RETORNAR RESPUESTA EXITOSA
+                /// -----------------------------------------------------------
                 return Ok(new
                 {
                     Message = "Photo created successfully",
@@ -213,9 +292,13 @@ namespace CheckMachAPI.Controllers
             }
             catch (Exception ex)
             {
+                /// -----------------------------------------------------------
+                /// 🔟 ERROR → RETORNAR BAD REQUEST CON MENSAJE
+                /// -----------------------------------------------------------
                 return BadRequest(ex.Message);
             }
         }
+
 
 
         // DELETE: api/Photos/5
@@ -238,6 +321,9 @@ namespace CheckMachAPI.Controllers
         {
             return _context.Photos.Any(e => e.PhotoId == id);
         }
+
+     
+
     }
 
 
