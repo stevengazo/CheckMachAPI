@@ -55,14 +55,10 @@ namespace CheckMachAPI.Services
                         throw new Exception("File already exist");
                     }
 
-
-
-
                     using (var targetStream = File.Create(FilePath))
                     {
                         await section.Body.CopyToAsync(targetStream, BufferSize, cancellationToken);
                     }
-
 
                     saveFilePath = FilePath;
                 }else if ( !string.IsNullOrEmpty(contentDisposition.Name) )
@@ -74,9 +70,7 @@ namespace CheckMachAPI.Services
                     Console.WriteLine($"Campo: {contentDisposition.Name} = {value}");
                 }
             }
-
             return saveFilePath;
-
         }
 
 

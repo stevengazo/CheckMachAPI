@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CheckMachAPI.DTO;
 
 namespace CheckMachAPI.Controllers
 {
@@ -193,9 +194,6 @@ namespace CheckMachAPI.Controllers
         }
     }
 
-    public class FileUploadRequest
-    {
-        public IFormFile File { get; set; }
-    }
+
 
 }
