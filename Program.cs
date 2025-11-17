@@ -2,7 +2,9 @@ using CheckMachAPI.Data;
 using CheckMachAPI.Services;
 using CheckMachAPI.Settings;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -179,5 +181,7 @@ app.MapGet("/", async context =>
 
     await context.Response.WriteAsync(html);
 });
+
+app.MapGet("/echo", () => "ok");
 
 app.Run();

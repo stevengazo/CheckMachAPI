@@ -1,4 +1,5 @@
 using CheckMachAPI.Data;
+using CheckMachAPI.DTO;
 using CheckMachAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -234,7 +235,106 @@ namespace CheckMachAPI.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet("find")]
+        public async Task<IActionResult> FindUser([FromQuery] string query)
+        {
+            if (string.IsNullOrEmpty(query))
+                return BadRequest("Debe enviar un nombre de usuario o email");
 
+            var user = await _userManager.Users
+                .Where(u => u.UserName == query || u.Email == query)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            return Ok(new
+            {
+                user.Id,
+                user.UserName,
+                user.Email,
+                Roles = await _userManager.GetRolesAsync(user)
+            });
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new { Message = "Usuario desactivado correctamente" });
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] ApplicationUser model)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            user.Email = model.Email ?? user.Email;
+            user.UserName = model.UserName ?? user.UserName;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { Message = "Usuario actualizado correctamente" });
+        }
+        [HttpGet("roles")]
+        public IActionResult GetRoles()
+        {
+            var roles = _db.Roles.Select(r => new { r.Id, r.Name }).ToList();
+            return Ok(roles);
+        }
+
+        [HttpPost("assign-role")]
+        public async Task<IActionResult> AssignRoleToUser([FromBody] AssignRoleModel model)
+        {
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            var roleExists = await _db.Roles.AnyAsync(r => r.Name == model.Role);
+            if (!roleExists)
+                return BadRequest("El rol no existe");
+
+            var result = await _userManager.AddToRoleAsync(user, model.Role);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { Message = "Rol asignado correctamente" });
+        }
+
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+        {
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { Message = "Contraseña actualizada correctamente" });
+        }
+
+
+
+
+
+
+        #region Private Properties
         private async Task AssignRolesAsync(ApplicationUser user)
         {
             try
@@ -289,18 +389,13 @@ namespace CheckMachAPI.Controllers
             }
         }
 
-    }
 
-
-    public class ResetPasswordModel
-    {
-        public string Email { get; set; }
-        public string Code { get; set; } // Código de 8 dígitos enviado por email
-        public string NewPassword { get; set; }
+        #endregion
     }
 
 
     // Modelos para recibir datos
     public record RegisterModel(string Username, string Email, string Password);
     public record LoginModel(string Username, string Password);
+
 }
