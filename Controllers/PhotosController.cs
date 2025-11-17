@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -135,6 +136,29 @@ namespace CheckMachAPI.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetPhoto", new { id = photo.PhotoId }, photo);
+        }
+
+
+        // Multipart form data
+        [HttpPost]
+        [Route("multipart")]
+        public async Task<IActionResult> Upload()
+        {
+            // Check 
+            if( Request.ContentType?.StartsWith("multipart/form-data") ?? true)
+            {
+                return BadRequest("The Request does not contain valid multipart form data");
+            }
+
+            var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(Request.ContentType).Boundary).Value;
+
+            var cancellationToken = HttpContext.RequestAborted;
+
+            //  var filePath = await _fileManager.SaveViaMultipartReaderAsync(boundary,Request.Body,cancellationToken);
+           
+            throw new NotImplementedException();
+
+            return Ok();
         }
 
         // DELETE: api/Photos/5
