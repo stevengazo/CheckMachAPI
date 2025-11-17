@@ -45,7 +45,7 @@ namespace CheckMachAPI.Services
 
                 if (contentDisposition!.DispositionType.Equals("form-data") && !string.IsNullOrEmpty(contentDisposition.FileName))
                 {
-                    string Filename = contentDisposition.FileName;
+                    string Filename = contentDisposition.FileName.Trim('"');
                     string basePath = await CreateRootFolderAsync();
                     string ImagesPath = await CreateFolderAsync(basePath, "img");
                     string FilePath = Path.Combine(ImagesPath, Filename);
@@ -93,6 +93,5 @@ namespace CheckMachAPI.Services
             return basePath;
         }
     }
+}
 
-}
-}

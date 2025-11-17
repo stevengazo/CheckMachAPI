@@ -1,5 +1,6 @@
 ﻿using CheckMachAPI.Data;
 using CheckMachAPI.Models;
+using CheckMachAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +19,12 @@ namespace CheckMachAPI.Controllers
     public class PhotosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly FileManagerService _file;
 
-        public PhotosController(ApplicationDbContext context)
+        public PhotosController(ApplicationDbContext context, FileManagerService fileManager)
         {
             _context = context;
+            _file = fileManager;
         }
 
         // GET: api/Photos
@@ -140,25 +143,32 @@ namespace CheckMachAPI.Controllers
 
 
         // Multipart form data
-        [HttpPost]
-        [Route("multipart")]
+        [HttpPost("multipart")]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload()
         {
-            // Check 
-            if( Request.ContentType?.StartsWith("multipart/form-data") ?? true)
+            try
             {
-                return BadRequest("The Request does not contain valid multipart form data");
+                // Aquí ignoras el modelo y usas tu FileManager basado en streaming
+
+                if (!Request.ContentType?.StartsWith("multipart/form-data") ?? true)
+                    return BadRequest("Request must be multipart/form-data.");
+
+                var mediaType = MediaTypeHeaderValue.Parse(Request.ContentType);
+                var boundary = HeaderUtilities.RemoveQuotes(mediaType.Boundary).Value;
+
+                var files = await _file.SaveViaMultipartReaderAsync(
+                    boundary,
+                    Request.Body,
+                    HttpContext.RequestAborted
+                );
+
+                return Ok(new { Message = "Uploaded", Files = files });
             }
-
-            var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(Request.ContentType).Boundary).Value;
-
-            var cancellationToken = HttpContext.RequestAborted;
-
-            //  var filePath = await _fileManager.SaveViaMultipartReaderAsync(boundary,Request.Body,cancellationToken);
-           
-            throw new NotImplementedException();
-
-            return Ok();
+            catch (Exception f)
+            {
+                return BadRequest(f.Message);
+            }
         }
 
         // DELETE: api/Photos/5
@@ -182,4 +192,10 @@ namespace CheckMachAPI.Controllers
             return _context.Photos.Any(e => e.PhotoId == id);
         }
     }
+
+    public class FileUploadRequest
+    {
+        public IFormFile File { get; set; }
+    }
+
 }
