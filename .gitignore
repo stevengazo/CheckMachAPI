@@ -13,6 +13,10 @@ out/
 *.dotCover
 *.idea/
 
+# Data Temp
+
+Files/
+
 # Rider
 .idea/
 *.sln.iml
