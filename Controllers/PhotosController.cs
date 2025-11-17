@@ -1,21 +1,24 @@
 ﻿using CheckMachAPI.Data;
+using CheckMachAPI.DTO;
 using CheckMachAPI.Models;
 using CheckMachAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CheckMachAPI.DTO;
 
 namespace CheckMachAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [RequestSizeLimit(long.MaxValue)]
+    [RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue)]
 
     public class PhotosController : ControllerBase
     {
@@ -131,46 +134,89 @@ namespace CheckMachAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Photos
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Photo>> PostPhoto(Photo photo)
-        {
-            _context.Photos.Add(photo);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPhoto", new { id = photo.PhotoId }, photo);
-        }
-
-
-        // Multipart form data
-        [HttpPost("multipart")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload()
+        [RequestSizeLimit(long.MaxValue)]
+        [RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue)]
+        public async Task<IActionResult> UploadAndCreatePhoto()
         {
             try
             {
-                // Aquí ignoras el modelo y usas tu FileManager basado en streaming
-
                 if (!Request.ContentType?.StartsWith("multipart/form-data") ?? true)
-                    return BadRequest("Request must be multipart/form-data.");
+                    return BadRequest("Request must be multipart/form-data");
 
                 var mediaType = MediaTypeHeaderValue.Parse(Request.ContentType);
                 var boundary = HeaderUtilities.RemoveQuotes(mediaType.Boundary).Value;
 
-                var files = await _file.SaveViaMultipartReaderAsync(
-                    boundary,
-                    Request.Body,
-                    HttpContext.RequestAborted
-                );
+                // 1️⃣ Leer partes del multipart
+                var reader = new MultipartReader(boundary, Request.Body);
 
-                return Ok(new { Message = "Uploaded", Files = files });
+                var formFields = new Dictionary<string, string>();
+                var savedFiles = new List<string>();
+
+                MultipartSection? section;
+                while ((section = await reader.ReadNextSectionAsync()) != null)
+                {
+                    var hasContentDispositionHeader =
+                        ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition);
+                  
+                    if (!hasContentDispositionHeader)
+                        continue;
+
+                    // 2️⃣ SI ES ARCHIVO → lo envías a tu FileManager
+                    if (contentDisposition!.DispositionType == "form-data" &&
+                        !string.IsNullOrEmpty(contentDisposition.FileName.Value))
+                    {
+                        string storedPath = await _file.SaveFileStreamAsync(
+                                                                               section.Body,
+                                                                               contentDisposition.FileName.Value!,
+                                                                               HttpContext.RequestAborted
+                                                                           );
+                        savedFiles.Add(storedPath);
+                        continue;
+                    }
+
+                    // 3️⃣ SI ES FORM FIELD → lo agregas al diccionario
+                    if (contentDisposition.DispositionType == "form-data")
+                    {
+                        using var readerField = new StreamReader(section.Body);
+                        string fieldValue = await readerField.ReadToEndAsync();
+                        formFields[contentDisposition.Name.Value!] = fieldValue;
+                    }
+                }
+
+                // 4️⃣ Validar campos requeridos del modelo
+                if (!formFields.ContainsKey("ReferenceId") ||
+                    !formFields.ContainsKey("PhotoType"))
+                {
+                    return BadRequest("ReferenceId y PhotoType son obligatorios");
+                }
+
+                // 5️⃣ Crear modelo Photo
+                var photo = new Photo
+                {
+                    FilePath = savedFiles.FirstOrDefault(),
+                    Description = formFields.GetValueOrDefault("Description"),
+                    ReferenceId = int.Parse(formFields["ReferenceId"]),
+                    PhotoType = formFields["PhotoType"]
+                };
+
+                _context.Photos.Add(photo);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    Message = "Photo created successfully",
+                    Photo = photo,
+                    Files = savedFiles
+                });
             }
-            catch (Exception f)
+            catch (Exception ex)
             {
-                return BadRequest(f.Message);
+                return BadRequest(ex.Message);
             }
         }
+
 
         // DELETE: api/Photos/5
         [HttpDelete("{id}")]

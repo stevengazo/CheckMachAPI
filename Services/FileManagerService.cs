@@ -25,53 +25,33 @@ namespace CheckMachAPI.Services
         }
 
 
-        public async Task<string> SaveViaMultipartReaderAsync(
-            string boundary,
-            Stream body,
-            CancellationToken cancellationToken)
+        public async Task<string> SaveFileStreamAsync(
+          Stream fileStream,
+          string fileName,
+          CancellationToken cancellationToken)
         {
-            var reader = new MultipartReader(boundary, body);
-            MultipartSection? section = null;
+            // Crear carpeta raíz si no existe
+            string basePath = await CreateRootFolderAsync();
 
-            string? saveFilePath = null;
+            // Crear subcarpeta img
+            string imagesPath = await CreateFolderAsync(basePath, "img");
 
-            while ((section = await reader.ReadNextSectionAsync(cancellationToken)) != null)
+            // Ruta final del archivo
+            string filePath = Path.Combine(imagesPath, fileName);
+
+            // Validación
+            if (File.Exists(filePath))
+                throw new Exception("File already exists");
+
+            // Guardar archivo
+            using (var targetStream = File.Create(filePath))
             {
-                var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition);
-                if (!hasContentDispositionHeader)
-                {
-                    continue;
-                }
-
-                if (contentDisposition!.DispositionType.Equals("form-data") && !string.IsNullOrEmpty(contentDisposition.FileName))
-                {
-                    string Filename = contentDisposition.FileName.Trim('"');
-                    string basePath = await CreateRootFolderAsync();
-                    string ImagesPath = await CreateFolderAsync(basePath, "img");
-                    string FilePath = Path.Combine(ImagesPath, Filename);
-
-                    if (File.Exists(FilePath))
-                    {
-                        throw new Exception("File already exist");
-                    }
-
-                    using (var targetStream = File.Create(FilePath))
-                    {
-                        await section.Body.CopyToAsync(targetStream, BufferSize, cancellationToken);
-                    }
-
-                    saveFilePath = FilePath;
-                }else if ( !string.IsNullOrEmpty(contentDisposition.Name) )
-                {
-                    using var streamReader = new StreamReader(section.Body);
-                    var value = await streamReader.ReadToEndAsync(cancellationToken);
-
-                    // Aquí puedes procesar campos normales (ej: title, description)
-                    Console.WriteLine($"Campo: {contentDisposition.Name} = {value}");
-                }
+                await fileStream.CopyToAsync(targetStream, 81920, cancellationToken);
             }
-            return saveFilePath;
+
+            return filePath;
         }
+
 
 
         private async Task<string> CreateFolderAsync(string basepath,string folderName)
