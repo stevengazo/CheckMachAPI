@@ -50,6 +50,14 @@ namespace CheckMachAPI.Services
                     string ImagesPath = await CreateFolderAsync(basePath, "img");
                     string FilePath = Path.Combine(ImagesPath, Filename);
 
+                    if (File.Exists(FilePath))
+                    {
+                        throw new Exception("File already exist");
+                    }
+
+
+
+
                     using (var targetStream = File.Create(FilePath))
                     {
                         await section.Body.CopyToAsync(targetStream, BufferSize, cancellationToken);
