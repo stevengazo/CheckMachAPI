@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  checkmachapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=CheckMachDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+      - Jwt__Key=DevClaveSuperSecreta12345
+      - Jwt__Issuer=CheckMachAPI
+      - Jwt__Audience=CheckMachAPIUsers
+    volumes:
+      - ./CheckMachAPI:/app  # Hot reload de código
+    ports:
+      - "5002:5000" # Puedes mapear otro puerto para desarrollo
+      - "5003:5001"
+
+  db:
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sql_data_dev:/var/opt/mssql
+
+volumes:
+  sql_data_dev:

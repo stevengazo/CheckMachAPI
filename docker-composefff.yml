@@ -1,14 +1,11 @@
-﻿version: "3.9"
+version: "3.9"
 
 services:
   checkmachapi:
-    image: ${DOCKER_REGISTRY-}checkmachapi # Usando la imagen definida en el entorno (si existe)
-    build:
-      context: .
-      dockerfile: CheckMachAPI/Dockerfile
+    build: .
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "5000:5000"
+      - "5001:5001"
     environment:
       # 🔹 Conexión a SQL Server (contenedor interno)
       - ConnectionStrings__DefaultConnection=Server=db;Database=CheckMachDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
