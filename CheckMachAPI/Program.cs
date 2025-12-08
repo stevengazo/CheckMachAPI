@@ -102,11 +102,12 @@ var app = builder.Build();
 
 
 app.UseStaticFiles();
+string FilesPath = Path.Combine(builder.Environment.ContentRootPath, "Files");
 
+Directory.CreateDirectory(FilesPath);
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "Files")),
+    FileProvider = new PhysicalFileProvider(FilesPath),
     RequestPath = "/files"
 });
 

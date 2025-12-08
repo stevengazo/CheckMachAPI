@@ -2,6 +2,7 @@
 
 services:
   checkmachapi:
+    restart: always
     image: ${DOCKER_REGISTRY-}checkmachapi # Usando la imagen definida en el entorno (si existe)
     build:
       context: .
@@ -14,7 +15,7 @@ services:
       - ConnectionStrings__DefaultConnection=Server=db;Database=CheckMachDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
 
       # 🔹 Configuración JWT
-      - Jwt__Key=TuClaveSuperSecreta12345
+      - Jwt__Key=TuClaveSuperSecretallldfvkf%Gvffv12345
       - Jwt__Issuer=CheckMachAPI
       - Jwt__Audience=CheckMachAPIUsers
 
@@ -35,6 +36,7 @@ services:
       - azurite
 
   db:
+    restart: always
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       SA_PASSWORD: "YourStrong!Passw0rd"
@@ -45,6 +47,7 @@ services:
       - sql_data:/var/opt/mssql
 
   azurite:
+    restart: always
     image: mcr.microsoft.com/azure-storage/azurite
     container_name: azurite
     ports:
