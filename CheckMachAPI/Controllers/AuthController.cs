@@ -235,6 +235,61 @@ namespace CheckMachAPI.Controllers
                 return BadRequest();
             }
         }
+
+        [HttpGet("validate-token")]
+        public IActionResult ValidateToken([FromQuery] string? token = null)
+        {
+            // 1. Obtener token desde el header si no se envió por query
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                var authHeader = Request.Headers["Authorization"].ToString();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                    token = authHeader["Bearer ".Length..];
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+                return BadRequest("Debe enviar un token JWT.");
+
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+                var parameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero // Sin tolerancia de tiempo
+                };
+
+                // Valida token
+                var principal = tokenHandler.ValidateToken(token, parameters, out SecurityToken validatedToken);
+
+                return Ok(new
+                {
+                    Valid = true,
+                    Expiration = validatedToken.ValidTo,
+                    UserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                    Username = principal.Identity?.Name,
+                    Claims = principal.Claims.Select(c => new { c.Type, c.Value })
+                });
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                return Unauthorized("El token ha expirado.");
+            }
+            catch (Exception)
+            {
+                return Unauthorized("Token inválido.");
+            }
+        }
+
+
+
         [HttpGet("find")]
         public async Task<IActionResult> FindUser([FromQuery] string query)
         {
@@ -270,6 +325,7 @@ namespace CheckMachAPI.Controllers
 
             return Ok(new { Message = "Usuario desactivado correctamente" });
         }
+     
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] ApplicationUser model)
         {
@@ -287,6 +343,7 @@ namespace CheckMachAPI.Controllers
 
             return Ok(new { Message = "Usuario actualizado correctamente" });
         }
+       
         [HttpGet("roles")]
         public IActionResult GetRoles()
         {

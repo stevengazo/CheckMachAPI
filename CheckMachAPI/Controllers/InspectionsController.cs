@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 
 namespace CheckMachAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+
     public class InspectionsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
