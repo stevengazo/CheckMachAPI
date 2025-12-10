@@ -46,18 +46,18 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the machine that was inspected.
         /// </summary>
-        public Machine Machine { get; set; }
+        public Machine? Machine { get; set; }
 
         /// <summary>
         /// Gets or sets the foreign key referencing the user who performed the inspection.
         /// </summary>
         [ForeignKey(nameof(User))]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the user who performed the inspection.
         /// </summary>
-        public ApplicationUser User { get; set; }
+        public ApplicationUser? User { get; set; }
     }
 
 }

@@ -54,12 +54,12 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the identifier of the user who performed or logged the maintenance.
         /// </summary>
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the user who performed or logged the maintenance.
         /// </summary>
-        public ApplicationUser User { get; set; }
+        public ApplicationUser? User { get; set; }
 
         /// <summary>
         /// Gets or sets the identifier of the machine associated with the maintenance.
@@ -69,7 +69,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the machine on which the maintenance was performed.
         /// </summary>
-        public Machine Machine { get; set; }
+        public Machine? Machine { get; set; }
     }
 
 }

@@ -35,18 +35,18 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets any additional notes or comments about the movement.
         /// </summary>
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         /// <summary>
         /// Gets or sets the foreign key referencing the user who recorded the movement.
         /// </summary>
         [ForeignKey(nameof(User))]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the user who recorded the inventory movement.
         /// </summary>
-        public ApplicationUser User { get; set; }
+        public ApplicationUser? User { get; set; }
 
         /// <summary>
         /// Gets or sets the foreign key referencing the associated inventory item.
@@ -57,7 +57,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the inventory item affected by this movement.
         /// </summary>
-        public InventoryItem InventoryItem { get; set; }
+        public InventoryItem? InventoryItem { get; set; }
     }
 
 }

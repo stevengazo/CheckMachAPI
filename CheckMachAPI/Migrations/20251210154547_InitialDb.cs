@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CheckMachAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDB : Migration
+    public partial class InitialDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -311,7 +311,7 @@ namespace CheckMachAPI.Migrations
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Pass = table.Column<bool>(type: "bit", nullable: false),
                     MachineId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -320,8 +320,7 @@ namespace CheckMachAPI.Migrations
                         name: "FK_Inspections_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Inspections_Machines_MachineId",
                         column: x => x.MachineId,
@@ -343,7 +342,7 @@ namespace CheckMachAPI.Migrations
                     Deleted = table.Column<bool>(type: "bit", nullable: false),
                     Author = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     MachineId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -353,8 +352,7 @@ namespace CheckMachAPI.Migrations
                         name: "FK_Maintenances_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Maintenances_Machines_MachineId",
                         column: x => x.MachineId,
@@ -400,8 +398,8 @@ namespace CheckMachAPI.Migrations
                     MovementType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     MovementDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     InventoryItemId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -411,8 +409,7 @@ namespace CheckMachAPI.Migrations
                         name: "FK_InventoryMoves_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_InventoryMoves_InventoryItems_InventoryItemId",
                         column: x => x.InventoryItemId,

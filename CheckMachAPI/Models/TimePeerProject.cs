@@ -32,7 +32,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the project associated with this time entry.
         /// </summary>
-        public Project Project { get; set; }
+        public Project? Project { get; set; }
 
         /// <summary>
         /// Gets or sets the identifier of the machine used during this time entry.
@@ -42,7 +42,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the machine associated with this time entry.
         /// </summary>
-        public Machine Machine { get; set; }
+        public Machine? Machine { get; set; }
     }
 
 }

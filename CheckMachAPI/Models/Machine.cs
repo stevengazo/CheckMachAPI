@@ -54,17 +54,17 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the collection of time records associated with this machine.
         /// </summary>
-        public ICollection<TimePeerProject> Times { get; set; }
+        public ICollection<TimePeerProject>? Times { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of maintenance records associated with this machine.
         /// </summary>
-        public ICollection<Maintenance> Maintenances { get; set; }
+        public ICollection<Maintenance>? Maintenances { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of inspection records associated with this machine.
         /// </summary>
-        public ICollection<Inspection> Inspections { get; set; }
+        public ICollection<Inspection>? Inspections { get; set; }
     }
 
 }

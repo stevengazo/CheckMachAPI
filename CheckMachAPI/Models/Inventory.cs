@@ -47,7 +47,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the collection of inventory items associated with this inventory.
         /// </summary>
-        public ICollection<InventoryItem> InventoryItems { get; set; }
+        public ICollection<InventoryItem>? InventoryItems { get; set; }
     }
 
 }

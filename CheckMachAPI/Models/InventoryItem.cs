@@ -40,7 +40,7 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the item details associated with this inventory record.
         /// </summary>
-        public Item Item { get; set; }
+        public Item? Item { get; set; }
 
         /// <summary>
         /// Gets or sets the foreign key referencing the associated inventory.
@@ -51,12 +51,12 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the inventory to which this item belongs.
         /// </summary>
-        public Inventory Inventory { get; set; }
+        public Inventory? Inventory { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of inventory movements associated with this item.
         /// </summary>
-        public ICollection<InventoryMove> InventoryMoves { get; set; }
+        public ICollection<InventoryMove>? InventoryMoves { get; set; }
     }
 
 }

@@ -46,7 +46,6 @@ namespace CheckMachAPI.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("InspectionId");
@@ -140,14 +139,12 @@ namespace CheckMachAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("InventoryMoveId");
@@ -254,7 +251,6 @@ namespace CheckMachAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("MaintenanceId");
@@ -630,9 +626,7 @@ namespace CheckMachAPI.Migrations
 
                     b.HasOne("CheckMachAPI.Data.ApplicationUser", "User")
                         .WithMany("Inspections")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Machine");
 
@@ -668,9 +662,7 @@ namespace CheckMachAPI.Migrations
 
                     b.HasOne("CheckMachAPI.Data.ApplicationUser", "User")
                         .WithMany("InventoryMoves")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("InventoryItem");
 
@@ -687,9 +679,7 @@ namespace CheckMachAPI.Migrations
 
                     b.HasOne("CheckMachAPI.Data.ApplicationUser", "User")
                         .WithMany("Maintenances")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Machine");
 

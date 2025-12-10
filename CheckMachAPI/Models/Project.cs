@@ -47,6 +47,6 @@ namespace CheckMachAPI.Models
         /// <summary>
         /// Gets or sets the collection of time records associated with this project.
         /// </summary>
-        public ICollection<TimePeerProject> Times { get; set; }
+        public ICollection<TimePeerProject>? Times { get; set; }
     }
 }
